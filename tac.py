@@ -198,7 +198,7 @@ class TicTacToeBoard:
                                     self.game.process_move(move)
                                     self.game.toggle_player()
                                     if not self.game.has_winner() and not self.game.is_tied():
-                                        ai_row, ai_col = self.game.get_best_move(current_player=self.game.current_player)
+                                        ai_row, ai_col = self.game.get_best_move(self.game.current_player)
                                         ai_move = Move(ai_row, ai_col, self.game.current_player.label)
                                         self.game.process_move(ai_move)
                                         self.game.toggle_player()

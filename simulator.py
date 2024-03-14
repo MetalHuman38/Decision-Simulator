@@ -17,10 +17,11 @@ from constants import (WIDTH, HEIGHT,
                        CROSS_WIDTH,
                        OFFSET)
 
-# Initialize the pygame library
+
+# Initialize the game
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Simulator')
+pygame.display.set_caption('Cancer Treatment Decision Simulator')
 screen.fill(BG_COLOR)
 
 
@@ -115,6 +116,7 @@ class AI:
         index = random.randrange(0, len(empty_squares))
         return empty_squares[index]  # (row, col)
     
+    # Minimax algorithm
     def minimax(self, board, is_maximizing):
         # Check terminal cases
         case = board.final_state()
@@ -173,12 +175,52 @@ class Game:
         self.game_mode = 'ai'  # playerVSai or playerVSplayer
         self.running = True
         self.draw_lines()
+        self._has_winner = False
+        self.patient_profile = {}  # Initialize an empty patient profile
         
     def make_move(self, row, col):
+        # Simulate the treatment decision
+        self.update_patient_profile(row, col)
         self.board.mark_square(row, col, self.player)
         self.draw_fig(row, col)
         self.next_turn()
+        self.process_move()  # Check if the game is over after each move
         print(f"Doctor {self.player} has marked the square in pos {row, col}")
+        
+    def update_patient_profile(self, row, col):
+        # Simulate updating the patient profile based on treatment decision
+        self.patient_profile[(row, col)] = 'Treatment Decision'
+        
+    def process_move(self):
+        if self.has_winner():
+            self.running = False
+            print(f"Cancer Treatment has been decided for patient {self.player}!")
+            # Display patient profile and outcome message
+            self.display_patient_profile()
+            self.display_outcome_message()
+        elif self.is_tied():
+            self.running = False
+            print(f"Patient {self.player} has been diagnosed with cancer!")
+            # Display patient profile and outcome message
+            self.display_patient_profile()
+            self.display_outcome_message()
+            
+    def display_patient_profile(self):
+        print("Patient Profile:")
+        for move, decision in self.patient_profile.items():
+            print(f"Move {move}: {decision}")
+
+    def display_outcome_message(self):
+        if self.has_winner():
+            print("The patient's cancer treatment was successful!")
+        else:
+            print("The patient's cancer treatment was not successful.")
+            
+    def has_winner(self):
+        return self.board.final_state(show=False) != 0
+
+    def is_tied(self):
+        return self.board.is_full() and not self.has_winner()
 
     def draw_lines(self):
         # Clear the screen with the background color
@@ -215,22 +257,34 @@ class Game:
     def change_game_mode(self):
         self.game_mode = 'ai' if self.game_mode == 'playerVSplayer' else 'playerVSplayer'
         print(f"Game mode changed to {self.game_mode}")
-        
+           
     def isOver(self):
         return self.board.final_state(show=True) != 0 or self.board.is_full()
         
     def reset(self):
         self.__init__()
         
-        
+
 # Main loop
 def main():
-
-    # Create an instance of the Game class
+    
+    # Welcome message and rules explanation
+    print("\033[1m\033[95mWelcome to the Treatment Decision Simulator!\033[0m")
+    print("\033[93mPLEASE READ THE FOLLOWING INSTRUCTIONS BEFORE STARTING THE GAME\033[0m")
+    print("\033[96mIn this game, your moves represent treatment decisions\033[0m")
+    print("\033[96mand the AI opponent (cancer) reacts accordingly.\033[0m")
+    print("\033[96mThe patient profile will evolve based on your decisions\033[0m")
+    print("\033[96mand the challenges posed by cancer.\033[0m")
+    print("\033[96mThe game ends when the patient's outcome is determined.\033[0m")
+    print("\033[92mWhen you are ready to start, click on the desired cell to begin the game.\033[0m")
+    print("\033[92mif no winner, press '\033[97mr\033[92m' to reset the game.\033[0m")
+    print("\033[92mGame mode can also be changed to Doctor vs Doctor by clicking '\033[97mg\033[92m'.\033[0m")
+    print("\033[92mPress '\033[97m0\033[92m' to change AI's level to random.\033[0m")
+    
     game = Game()
     board = game.board
     ai = game.ai
-
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -244,7 +298,7 @@ def main():
                 if event.key == pygame.K_g:
                     game.change_game_mode()
                     
-                # Resets the screen to start playing.
+                # Resets the screen to start new game
                 if event.key == pygame.K_r:
                     game.reset()
                     board = game.board
@@ -270,7 +324,7 @@ def main():
                     
                     if game.isOver():
                         game.running = False
-                    
+         
         # AI marking cells
         if game.game_mode == 'ai' and game.player == ai.player and game.running:
             pygame.display.update()
